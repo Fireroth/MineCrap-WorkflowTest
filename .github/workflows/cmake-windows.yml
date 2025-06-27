@@ -13,30 +13,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up build directory
-      id: vars
-      shell: bash
-      run: echo "build-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-
     - name: Configure CMake (Windows/MSVC)
       run: >
-        cmake -B ${{ steps.vars.outputs.build-dir }}
+        cmake -B build
         -DCMAKE_C_COMPILER=cl
         -DCMAKE_CXX_COMPILER=cl
         -DCMAKE_BUILD_TYPE=Release
-        -S ${{ github.workspace }}
+        -S .
 
     - name: Build (Windows)
-      run: cmake --build ${{ steps.vars.outputs.build-dir }} --config Release
+      run: cmake --build build --config Release
 
     - name: Run Tests
-      working-directory: ${{ steps.vars.outputs.build-dir }}
+      working-directory: build
       run: ctest --build-config Release
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: windows-build
-        path: ${{ steps.vars.outputs.build-dir }}/bin/Release/**
+        path: bin/Release/**
         if-no-files-found: error
         retention-days: 14
