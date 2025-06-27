@@ -1,45 +1,34 @@
-# .github/workflows/build.yml
-name: Build (CMake – Win + Ubuntu)
+name: CMake Windows Build
 
 on:
-  push:    { branches: [main] }
+  push:
+    branches: [ "main" ]
   pull_request:
-  workflow_dispatch:
-
-env:
-  BUILD_TYPE: Release
+    branches: [ "main" ]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+  build-windows:
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install X11/Wayland dev packages
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          xorg-dev libwayland-dev libxkbcommon-dev    # per official GLFW docs  :contentReference[oaicite:1]{index=1}
+    - name: Set up build directory
+      id: vars
+      shell: bash
+      run: echo "build-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Configure CMake
-      run: |
-        cmake -S . -B build \
-              -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-              ${{ runner.os == 'Windows' && '-G "Visual Studio 17 2022" -A x64' || '' }}
-                      # explicit VS generator keeps builds reproducible :contentReference[oaicite:2]{index=2}
+    - name: Configure CMake (Windows/MSVC)
+      run: >
+        cmake -B ${{ steps.vars.outputs.build-dir }}
+        -DCMAKE_C_COMPILER=cl
+        -DCMAKE_CXX_COMPILER=cl
+        -DCMAKE_BUILD_TYPE=Release
+        -S ${{ github.workspace }}
 
-    - name: Build
-      run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+    - name: Build (Windows)
+      run: cmake --build ${{ steps.vars.outputs.build-dir }} --config Release
 
-    - name: Upload binary as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: MineCrap-${{ matrix.os }}-${{ env.BUILD_TYPE }}
-        path: |
-          build/**/MineCrap*     # catches MineCrap.exe on Win and the ELF on Linux
+    - name: Run Tests
+      working-directory: ${{ steps.vars.outputs.build-dir }}
+      run: ctest --build-config Release
