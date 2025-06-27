@@ -21,7 +21,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=Release
         -S .
 
-    - name: Build (Windows)
+    - name: Build
       run: cmake --build build --config Release
 
     - name: Run Tests
@@ -34,4 +34,4 @@ jobs:
         name: windows-build
         path: bin/Release/**
         if-no-files-found: error
-        retention-days: 14
+        retention-days: 64
