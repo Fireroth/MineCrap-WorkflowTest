@@ -37,6 +37,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windows-build
-        path: ${{ steps.vars.outputs.build-dir }}/Release/**
+        path: ${{ steps.vars.outputs.build-dir }}/bin/Release/**
         if-no-files-found: error
-        retention-days: 1
+        retention-days: 14
